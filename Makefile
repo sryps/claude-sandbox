@@ -18,7 +18,7 @@ help:
 	@echo ""
 
 build:
-	docker build -t claudecode:latest -f claudecode.dockerfile .
+	docker build -t claudecode:latest -f claudecode.dockerfile . --no-cache
 
 run:
 	@bash code.sh
