@@ -31,19 +31,25 @@ then
   exit 1
 fi
 
-# Check if container is already running
-if docker ps --filter "name=claude-code-dev" --filter "status=running" | grep -q claude-code-dev; then
-  echo "Container 'claude-code-dev' is already running."
-  echo "Use 'make exec' to attach to it, or stop it first with 'make stop'."
+# Prompt for container name
+read -e -p "Enter a name for this container: " container_name
+if [ -z "$container_name" ]; then
+  echo "Error: No container name provided."
   exit 1
 fi
+CONTAINER_NAME="claude-code-dev-${container_name}"
 
 docker run -d \
   -v ${PATH_TO_CODE}:/workspace \
-  --name claude-code-dev \
+  --name $CONTAINER_NAME \
   --label project=claude-code \
   claudecode:latest \
   tail -f /dev/null
 
-echo "Container 'claude-code-dev' started in detached mode."
-echo "Use 'make exec' to enter the container."
+echo "Container '$CONTAINER_NAME' started."
+docker exec -it $CONTAINER_NAME claude
+
+# Cleanup after claude exits
+docker stop $CONTAINER_NAME > /dev/null
+docker rm $CONTAINER_NAME > /dev/null
+echo "Container '$CONTAINER_NAME' removed."
