@@ -39,6 +39,15 @@ if [ -z "$container_name" ]; then
 fi
 CONTAINER_NAME="claude-code-dev-${container_name}"
 
+# Prompt for dangerously skip permissions flag (default: yes)
+read -e -p "Skip permission prompts? (--dangerously-skip-permissions) [Y/n]: " skip_perms
+skip_perms="${skip_perms:-Y}"
+
+CLAUDE_CMD="claude"
+if [[ "$skip_perms" =~ ^[Yy]$ ]] || [ -z "$skip_perms" ]; then
+  CLAUDE_CMD="claude --dangerously-skip-permissions"
+fi
+
 docker run -d \
   -v ${PATH_TO_CODE}:/workspace \
   --name $CONTAINER_NAME \
@@ -47,7 +56,7 @@ docker run -d \
   tail -f /dev/null
 
 echo "Container '$CONTAINER_NAME' started."
-docker exec -it $CONTAINER_NAME claude
+docker exec -it $CONTAINER_NAME $CLAUDE_CMD
 
 # Cleanup after claude exits
 docker stop $CONTAINER_NAME > /dev/null

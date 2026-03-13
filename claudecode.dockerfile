@@ -27,7 +27,6 @@ RUN apt-get update && apt-get install -y \
 	ansible \
 	gnupg \
 	lsb-release \
-	software-properties-common \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Install Docker CLI
