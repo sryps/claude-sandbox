@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y \
 	ansible \
 	gnupg \
 	lsb-release \
+	gh \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Install Docker CLI
@@ -44,8 +45,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 	&& apt-get install -y nodejs \
 	&& rm -rf /var/lib/apt/lists/*
 
-# Install Claude Code
-RUN npm install -g @anthropic-ai/claude-code
+# Install Claude Code and TypeScript
+RUN npm install -g @anthropic-ai/claude-code typescript
 
 # Install Go
 RUN curl -OL https://go.dev/dl/go1.24.1.linux-amd64.tar.gz && \
@@ -58,6 +59,8 @@ RUN useradd -m -s /bin/bash dev && \
 
 # Set up working directory
 WORKDIR /workspace
+
+RUN mkdir -p /run/secrets && chown dev:dev /run/secrets
 
 # Switch to non-root user
 USER dev
