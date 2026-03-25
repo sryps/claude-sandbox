@@ -1,4 +1,4 @@
-# Claude Code Docker Environment
+# Claude Code Sandbox
 
 A containerized development environment for Claude Code. Drop in your project, get an isolated container with languages, tools, and drag-and-drop Claude skills ready to go.
 
