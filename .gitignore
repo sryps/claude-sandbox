@@ -2,3 +2,4 @@ repos/
 data/
 tmp/
 .env
+commit.msg

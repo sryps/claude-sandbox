@@ -1,259 +1,65 @@
 # Claude Code Docker Environment
 
-A containerized development environment for using Claude Code with multi-language projects. This setup provides an isolated, reproducible environment with Claude Code, Go, Python, Rust, Node.js, and common development tools.
+A containerized development environment for Claude Code. Drop in your project, get an isolated container with languages, tools, and drag-and-drop Claude skills ready to go.
 
-## Overview
+## Drag-and-Drop Claude Skills
 
-This project provides a Docker-based environment that includes:
+This repo ships a library of reusable Claude skills in `skills/sryps/`. When you `make run`, each skill is automatically mounted into your project's `.claude/skills/` directory (skipping any that already exist in your project). Claude picks them up immediately — no configuration needed.
 
-- Go 1.25 (Bookworm base)
-- Python 3 with pip and venv
-- Rust (latest stable via rustup)
-- Node.js 20.x
-- Claude Code CLI
-- Common development tools (git, curl, jq, tree, etc.)
-- Non-root user for security
+| Skill | Description |
+|-------|-------------|
+| `/commit` | Write a commit message following project conventions |
+| `/pr-summary` | Generate a PR summary from branch commits |
+| `/merge` | Merge a branch, detect conflicts, and resolve them |
+| `/review-prod` | Review code for production readiness |
+| `/review-security` | Security-focused code and infrastructure review |
+| `/docs` | Verify documentation aligns with codebase and fix drift |
+| `/runbook` | Generate operational runbooks for services |
+| `/quint` | Autonomous Quint formal specification workflow |
 
-## Prerequisites
+To add your own skills, create a `SKILL.md` in `skills/sryps/<skill-name>/` and it will be mounted into every new container.
 
-- Docker installed on your system
-- Your code repository or project directory
+## What's in the Container
 
-## Setup
+| Category | Tools |
+|----------|-------|
+| Languages | Go 1.24, Python 3 (pip, venv), Rust (stable via rustup), Node.js 20, TypeScript |
+| Infrastructure | Terraform, Ansible, Docker CLI |
+| Dev Tools | git, gh (GitHub CLI), protobuf-compiler, clang, llvm, pkg-config |
+| Utilities | curl, wget, jq, tree, openssl, net-tools, dnsutils |
+| Rust Tools | taplo (TOML formatter/linter), rust-analyzer (LSP) |
+| Node Tools | Claude Code CLI, Quint (formal specification) |
 
-Build the Docker image:
+Base image: `debian:trixie-slim`. Runs as non-root user `dev`.
 
-```bash
-make build
-```
-
-This builds the Docker image tagged as `claudecode:latest`.
-
-## Usage
-
-### Quick Start
-
-The easiest way to get started:
+## Quick Start
 
 ```bash
 # Build the image
 make build
 
-# Run Claude Code (will prompt for your project path)
+# Run — prompts for project path, container name, then drops you into Claude
 make run
 ```
 
-### Running Claude Code on Your Project
+That's it. `make run` handles everything:
 
-#### Option 1: One-Step Run (Recommended)
+1. Prompts for your project directory
+2. Prompts for a container name
+3. Asks whether to skip permission prompts
+4. Mounts your project + skills into the container
+5. Configures git identity and GitHub access (if `GH_TOKEN` is set)
+6. Launches Claude Code
+7. Cleans up the container when you exit
 
-```bash
-make run
-```
+## GitHub Access
 
-This command will:
-
-1. Prompt you for your project directory path
-2. Start the container in detached mode
-3. Automatically attach you to Claude Code
-
-#### Option 2: Manual Steps
-
-**Step 1: Start the Container**
-
-You can start the container using the `code.sh` script with either method:
-
-**Interactive mode** (prompts for path):
-
-```bash
-./code.sh
-```
-
-**Direct path argument**:
-
-```bash
-./code.sh /path/to/your/project
-```
-
-The script will:
-
-- Check if a container is already running
-- Mount your project directory to `/workspace` inside the container
-- Start the container in detached mode with label `project=claude-code`
-
-**Step 2: Enter the Container**
-
-Use Claude Code directly:
-
-```bash
-make exec
-```
-
-Or open a bash shell:
-
-```bash
-make shell
-```
-
-Claude Code will prompt you for your Anthropic API key or login on first run.
-
-**Step 3: Stop the Container**
-
-When you're done:
-
-```bash
-make stop
-```
-
-### Additional Container Management
-
-**Check container status:**
-
-```bash
-make status
-```
-
-**View container logs:**
-
-```bash
-make logs
-```
-
-**Restart the container:**
-
-```bash
-make restart
-```
-
-**Full cleanup (stop, remove container and image):**
-
-```bash
-make clean
-```
-
-### Manual Docker Run
-
-If you prefer to run the container manually in detached mode:
-
-```bash
-docker run -d \
-  -v ~/.config/nvim:/home/developer/.config/nvim:ro \
-  -v /usr/local/bin/nvim:/usr/local/bin/nvim \
-  -v /path/to/your/code:/workspace \
-  --name claude-code-dev \
-  --label project=claude-code \
-  claudecode:latest \
-  tail -f /dev/null
-```
-
-Then exec into it:
-
-```bash
-docker exec -it claude-code-dev claude
-```
-
-Or open a shell:
-
-```bash
-docker exec -it claude-code-dev /bin/bash
-```
-
-## Makefile Commands
-
-- `make help` - Display all available commands
-- `make build` - Build the Docker image
-- `make run` - Start container and launch Claude Code (interactive)
-- `make exec` - Attach to running container with Claude Code
-- `make shell` - Open bash shell in running container
-- `make stop` - Stop the container
-- `make restart` - Stop and restart the container
-- `make status` - Show container status
-- `make logs` - Show and follow container logs
-- `make clean` - Remove container and image (full cleanup)
-
-## Project Structure
+Copy `.env.example` to `.env` and set your token to enable `git push`, `gh pr create`, etc. inside the container:
 
 ```
-.
-├── Makefile                 # Build and deployment commands
-├── claudecode.dockerfile    # Docker image definition
-├── code.sh                  # Convenience script to run Claude Code
-├── .gitignore              # Git ignore patterns
-└── README.md               # This file
-```
-
-## Environment Details
-
-- **Working Directory**: `/workspace`
-- **User**: `dev` (non-root)
-- **Go Path**: `/home/dev/go`
-- **Rust Path**: `/home/dev/.cargo`
-- **Python**: System Python 3 with pip and venv
-- **Base Image**: `golang:1.25-bookworm`
-
-## Security Notes
-
-- The container runs as a non-root user (`dev`) for security
-- Your API key is stored by Claude Code inside the container (not in the image or host)
-- The container is labeled with `project=claude-code` for easy identification
-- Use `make stop` to properly clean up the container when done
-
-## Troubleshooting
-
-### Container Already Running
-
-If you see `Container 'claude-code-dev' is already running`:
-
-- Use `make exec` to enter the existing container
-- Or use `make stop` to stop it first, then run `./code.sh` again
-
-### Permission Issues
-
-If you encounter permission issues with mounted volumes:
-
-- The container runs as user `dev` (UID typically 1000)
-- Ensure your project directory has appropriate read/write permissions
-
-### Docker Build Fails
-
-If the build fails:
-
-- Check your internet connection (required for downloading packages)
-- Ensure Docker has sufficient disk space
-- Try cleaning Docker cache: `docker system prune`
-
-## Customization
-
-### Adding More Tools
-
-To add additional tools to the container, edit `claudecode.dockerfile` and add them to the `apt-get install` command or add new `RUN` commands.
-
-### Changing Language Versions
-
-**Go**: Update the base image in `claudecode.dockerfile`:
-
-```dockerfile
-FROM golang:1.26-bookworm  # Change version here
-```
-
-**Python**: The Dockerfile uses the system Python 3. To use a specific version, you could install it via pyenv or use a different base image.
-
-**Rust**: Rust is installed via rustup. To update Rust inside the container, run:
-
-```bash
-rustup update
-```
-
-### Mounting Additional Volumes
-
-```bash
-docker run -d \
-  -v ${PATH_TO_CODE}:/workspace \
-  -v /path/to/other/data:/data \  # Add additional mounts here
-  --name claude-code-dev \
-  --label project=claude-code \
-  claudecode:latest \
-  tail -f /dev/null
+GH_TOKEN=ghp_your_token_here
+GIT_USER_NAME=Your Name
+GIT_USER_EMAIL=you@example.com
 ```
 
 ## License

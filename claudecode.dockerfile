@@ -72,7 +72,8 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV GOPATH=/home/dev/go
 ENV PATH=/usr/local/go/bin:$GOPATH/bin:/home/dev/.cargo/bin:$PATH
 
-RUN cargo install taplo-cli
+RUN cargo install taplo-cli && \
+	rustup component add rust-analyzer
 
 # Default command
 CMD ["/bin/bash"]
