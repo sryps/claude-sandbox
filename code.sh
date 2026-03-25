@@ -76,7 +76,7 @@ DOCKER_RUN_ARGS=(
 if [ -d "${SCRIPT_DIR}/skills/sryps" ]; then
   for skill_dir in "${SCRIPT_DIR}/skills/sryps"/*/; do
     skill_name=$(basename "$skill_dir")
-    if [ -d "${PATH_TO_CODE}/.claude/skills/${skill_name}" ]; then
+    if [ -f "${PATH_TO_CODE}/.claude/skills/${skill_name}/SKILL.md" ]; then
       echo "Skipping skill '${skill_name}' — already exists in project."
     else
       DOCKER_RUN_ARGS+=(-v "${skill_dir}:/workspace/.claude/skills/${skill_name}")

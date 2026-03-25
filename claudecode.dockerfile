@@ -45,8 +45,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 	&& apt-get install -y nodejs \
 	&& rm -rf /var/lib/apt/lists/*
 
-# Install Claude Code and TypeScript
-RUN npm install -g @anthropic-ai/claude-code typescript
+# Install Claude Code, TypeScript, and Quint CLI
+RUN npm install -g @anthropic-ai/claude-code typescript @informalsystems/quint
 
 # Install Go
 RUN curl -OL https://go.dev/dl/go1.24.1.linux-amd64.tar.gz && \
@@ -73,5 +73,6 @@ ENV GOPATH=/home/dev/go
 ENV PATH=/usr/local/go/bin:$GOPATH/bin:/home/dev/.cargo/bin:$PATH
 
 RUN cargo install taplo-cli
+
 # Default command
 CMD ["/bin/bash"]
