@@ -28,6 +28,8 @@ RUN apt-get update && apt-get install -y \
 	gnupg \
 	lsb-release \
 	gh \
+	postgresql \
+	sudo \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Install Docker CLI
@@ -53,8 +55,10 @@ RUN curl -OL https://go.dev/dl/go1.24.1.linux-amd64.tar.gz && \
 	tar -C /usr/local -xzf go1.24.1.linux-amd64.tar.gz && \
 	rm go1.24.1.linux-amd64.tar.gz
 
-# Create a non-root user for security
+# Create a non-root user with passwordless sudo
 RUN useradd -m -s /bin/bash dev && \
+	usermod -aG sudo dev && \
+	echo 'dev ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/dev && \
 	chown -R dev:dev /workspace
 
 # Set up working directory
