@@ -56,6 +56,12 @@ if [ -z "$container_name" ]; then
 fi
 CONTAINER_NAME="claude-code-dev-${container_name}"
 
+# Check if container with the same name already exists
+if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+  docker stop "$CONTAINER_NAME" > /dev/null
+  docker rm -f "$CONTAINER_NAME" > /dev/null
+fi
+
 # Prompt for dangerously skip permissions flag (default: yes)
 read -e -p "Skip permission prompts? (--dangerously-skip-permissions) [Y/n]: " skip_perms
 skip_perms="${skip_perms:-Y}"
